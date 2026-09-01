@@ -4,6 +4,7 @@ export class Filename {
   file_name!: string;
   output_file_name!: string;
   status!: string;
+  log!: string | null;
 }
 
 export class Jobs {

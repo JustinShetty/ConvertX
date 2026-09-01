@@ -106,7 +106,21 @@ function ResultsArticle({
                 <td safe class="max-w-[20vw] truncate">
                   {file.output_file_name}
                 </td>
-                <td safe>{file.status}</td>
+                <td>
+                  {file.status === "Failed, check logs" && file.log ? (
+                    <a
+                      class={`
+                        text-accent-500 underline
+                        hover:text-accent-400
+                      `}
+                      href={`${WEBROOT}/results/${job.id}/logs/${file.id}`}
+                    >
+                      {file.status}
+                    </a>
+                  ) : (
+                    <span safe>{file.status}</span>
+                  )}
+                </td>
                 <td class="flex flex-row gap-4">
                   {conversionFailed ? (
                     <span class="text-neutral-500">Unavailable</span>

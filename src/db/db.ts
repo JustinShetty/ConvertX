@@ -19,6 +19,7 @@ export function initializeDatabase(db: Database): void {
         file_name TEXT NOT NULL,
         output_file_name TEXT NOT NULL,
         status TEXT DEFAULT 'not started',
+        log TEXT,
         FOREIGN KEY (job_id) REFERENCES jobs(id)
       );
       CREATE TABLE IF NOT EXISTS jobs (
@@ -30,8 +31,8 @@ export function initializeDatabase(db: Database): void {
         FOREIGN KEY (user_id) REFERENCES users(id)
       );
     `);
-    db.exec("PRAGMA user_version = 1;");
-  } else if ((dbVersion?.user_version ?? 0) < 1) {
+    db.exec("PRAGMA user_version = 2;");
+  } else {
     // Don't trust user_version alone — verify the column is actually
     // missing before altering. This makes the migration safe to re-run
     // even against a file left in an inconsistent state.
@@ -42,8 +43,14 @@ export function initializeDatabase(db: Database): void {
       db.exec("ALTER TABLE file_names ADD COLUMN status TEXT DEFAULT 'not started';");
     }
 
-    db.exec("PRAGMA user_version = 1;");
-    console.log("Updated database to version 1.");
+    if (!columns.some((c) => c.name.toLowerCase() === "log")) {
+      db.exec("ALTER TABLE file_names ADD COLUMN log TEXT;");
+    }
+
+    if ((dbVersion?.user_version ?? 0) < 2) {
+      db.exec("PRAGMA user_version = 2;");
+      console.log("Updated database to version 2.");
+    }
   }
 
   // enable WAL mode

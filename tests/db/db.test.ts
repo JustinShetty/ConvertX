@@ -134,10 +134,10 @@ test("db initializes and creates tables on first run", () => {
   expect(tables.map((t) => t.name)).toContain("users");
   expect(tables.map((t) => t.name)).toContain("jobs");
   expect(tables.map((t) => t.name)).toContain("file_names");
-  expect(getDbVersion(testDb)).toBe(1);
+  expect(getDbVersion(testDb)).toBe(2);
 });
 
-test("db handles migration from version 0 to version 1", () => {
+test("db handles migration from version 0 to the latest version", () => {
   testDb.close();
   const migrateDbPath = `./data/test-db-migrate-${Date.now()}.sqlite`;
   const migrateDb = new Database(migrateDbPath, { create: true });
@@ -169,9 +169,10 @@ test("db handles migration from version 0 to version 1", () => {
     // Now runs the real migration logic from db.ts
     initializeDatabase(migrateDb);
 
-    expect(getDbVersion(migrateDb)).toBe(1);
+    expect(getDbVersion(migrateDb)).toBe(2);
     const columnInfo = getColumnInfo(migrateDb, "file_names");
     expect(columnInfo.map((c) => c.name)).toContain("status");
+    expect(columnInfo.map((c) => c.name)).toContain("log");
   } finally {
     if (migrateDb) migrateDb.close();
     if (existsSync(migrateDbPath)) unlinkSync(migrateDbPath);
@@ -194,11 +195,12 @@ test("db module exports a working database instance", () => {
   expect(tableNames).toContain("file_names");
 });
 
-test("db has correct schema with status column", () => {
+test("db has correct file metadata schema", () => {
   // Verify file_names table has the status column (created during initialization)
   const columns = getColumnInfo(testDb, "file_names");
   const columnNames = columns.map((c) => c.name);
   expect(columnNames).toContain("status");
+  expect(columnNames).toContain("log");
   expect(columnNames).toContain("job_id");
   expect(columnNames).toContain("file_name");
   expect(columnNames).toContain("output_file_name");

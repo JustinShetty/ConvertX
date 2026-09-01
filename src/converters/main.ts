@@ -157,7 +157,7 @@ export async function handleConvert(
   jobId: Cookie<string | undefined>,
 ) {
   const query = db.query(
-    "INSERT INTO file_names (job_id, file_name, output_file_name, status) VALUES (?1, ?2, ?3, ?4)",
+    "INSERT INTO file_names (job_id, file_name, output_file_name, status, log) VALUES (?1, ?2, ?3, ?4, ?5)",
   );
 
   for (const chunk of chunks(fileNames, MAX_CONVERT_PROCESS)) {
@@ -177,12 +177,15 @@ export async function handleConvert(
         );
       }
       const targetPath = `${userOutputDir}${newFileName}`;
+      let conversionLog: string | null = null;
       toProcess.push(
         new Promise((resolve, reject) => {
-          mainConverter(filePath, fileType, convertTo, targetPath, {}, converterName)
+          mainConverter(filePath, fileType, convertTo, targetPath, {}, converterName, (log) => {
+            conversionLog = log;
+          })
             .then((r) => {
               if (jobId.value) {
-                query.run(jobId.value, fileName, newFileName, r);
+                query.run(jobId.value, fileName, newFileName, r, conversionLog);
               }
               resolve(r);
             })
@@ -201,6 +204,7 @@ async function mainConverter(
   targetPath: string,
   options?: unknown,
   converterName?: string,
+  onError?: (log: string) => void,
 ) {
   const fileType = normalizeFiletype(fileTypeOriginal);
 
@@ -248,6 +252,8 @@ async function mainConverter(
 
     return "Done";
   } catch (error) {
+    const log = error instanceof Error ? (error.stack ?? error.message) : String(error);
+    onError?.(log.slice(0, 10_000));
     console.error(
       `Failed to convert ${inputFilePath} from ${fileType} to ${convertTo} using ${converterName}.`,
       error,

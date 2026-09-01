@@ -13,6 +13,7 @@ import { deleteJob } from "./pages/deleteJob";
 import { download } from "./pages/download";
 import { history } from "./pages/history";
 import { listConverters } from "./pages/listConverters";
+import { logs } from "./pages/logs";
 import { results } from "./pages/results";
 import { root } from "./pages/root";
 import { upload } from "./pages/upload";
@@ -46,6 +47,7 @@ const app = new Elysia({
   .use(download)
   .use(deleteJob)
   .use(results)
+  .use(logs)
   .use(deleteFile)
   .use(listConverters)
   .use(chooseConverter)

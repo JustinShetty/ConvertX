@@ -304,6 +304,7 @@ END:VCARD
 test("mainConverter returns 'Failed, check logs' when converter throws", async () => {
   // Try with a file that might cause issues (non-existent input)
   // This should trigger the catch block
+  let conversionLog = "";
   const result = await mainConverter(
     "/nonexistent/path.vcf",
     "vcf",
@@ -311,8 +312,12 @@ test("mainConverter returns 'Failed, check logs' when converter throws", async (
     "out.csv",
     undefined,
     "vcf",
+    (log) => {
+      conversionLog = log;
+    },
   );
   expect(result).toBe("Failed, check logs");
+  expect(conversionLog).toContain("ENOENT");
 });
 
 test("handleConvert with normalization covers fileTypeOrig variations", async () => {
